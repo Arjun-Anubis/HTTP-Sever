@@ -5,18 +5,69 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "log.h"
 
 
+#define BUFFER_SIZE 30
 #define CONNECTION_QUEUE_SIZE 5
-/* #define BUFFER_SIZE 30 */
+
+void tcp_protocol
+(
+	int fd,
+	void (*transmission_handler)( int, char *, struct sockaddr_in ),
+	int connection_number,
+	struct sockaddr_in address
+)
+{
+	/* Doc String */
+	char buffer[BUFFER_SIZE];
+	char * transmission;
+	int transmission_size =0;
+	int read_size = 1;
+
+	log_info
+	(
+		"Entering TCP Handler for connection number %d from %s port %d",
+	   	connection_number,
+	   	inet_ntoa( address.sin_addr ),
+	   	address.sin_port 
+	);
+
+	for ( int transmission_number = 1; read_size > 0 ; transmission_number++ ) {
+
+		transmission = malloc( 0 );
+		/* This is one transmission */
+		/* also this will be refactored into the networking function soon */
+		for 
+		(
+			int packet_number = 0;
+			( read_size = read( fd, buffer, BUFFER_SIZE ) ) >= BUFFER_SIZE ;
+			packet_number++
+		) 
+		{
+			log_trace( "Received %d bytes in packet number %d", read_size, packet_number );
+			transmission_size += read_size;
+			log_trace( "Transmission is now %d bytes long", transmission_size );
+			transmission = realloc( transmission, transmission_size );
+			strcat( transmission, buffer );
+		}
+
+		log_info( "End of transmission %d on connection number %d", transmission_number, connection_number );
+		transmission_handler( fd, transmission, address );
+		free( transmission );
+		
+		/* Call transmission handler */
+	}
+	log_info( "Exiting TCP handler for connection number %d", connection_number );
+}
 
 int create_listener
 (
 	const char address_as_string[ INET_ADDRSTRLEN ],
 	int port,
-	int * protocol( int fd )
+	void (*transmission_handler)( int, char *, struct sockaddr_in )
 )
 {
 	int sock;
@@ -63,8 +114,8 @@ int create_listener
 		}
 		if ( ( pid = fork() ) == 0 )
 		{
-			log_info( "Connection from %s port %d", inet_ntoa ( bind_address.sin_addr ), bind_address.sin_port );
-			protocol( connection );
+			log_info( "Connection from %s port %d connection number %d", inet_ntoa ( bind_address.sin_addr ), bind_address.sin_port, i );
+			tcp_protocol( connection, transmission_handler, i, bind_address );
 		}
 		else
 		{

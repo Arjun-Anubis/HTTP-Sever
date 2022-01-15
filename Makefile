@@ -1,13 +1,14 @@
 CC= clang
 LIBS= 
-CFLAGS=-Wall -g -DLOG_USE_COLOR
+HEADERDIR=header
+CFLAGS=-Wall -g -DLOG_USE_COLOR -I$(HEADERDIR)
 
 SRCDIR=src
-SRCS:=main.c log.c network.c
+SRCS:=main.c log.c network.c http.c
 SRCS:=$(addprefix $(SRCDIR)/,$(SRCS) )
 
 BUILDDIR=build
-OBJS:=log.o network.o
+OBJS:=log.o network.o http.o
 OBJS:=$(addprefix $(BUILDDIR)/,$(OBJS) )
 
 EXE=main
