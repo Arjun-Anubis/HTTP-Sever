@@ -1,10 +1,10 @@
-### HTTP Server
+# HTTP Server
 
 This is a lightweight HTTP server written in C, soon to be moved to C++
 
 Dependencies: None
 
-#### Compiling
+## Compiling
 
 Requirements:
 
