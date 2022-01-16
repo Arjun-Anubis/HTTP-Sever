@@ -6,6 +6,7 @@
 
 #include "http.h"
 #include "log.h"
+#include "utils.h"
 
 #define STRLEN(s) (sizeof(s)/sizeof(s[0]))
 
@@ -15,10 +16,12 @@ void send_http_through_socket
 	struct http_response response
  )
 {
-	char * message;
+	struct astring _message;
+	struct astring * message = &_message;
+
 	int message_len = 2;
 	int data_len = 0;
-	const char newline[2] = "\n";
+	char newline[2] = "\n";
 	char ** headers = response.headers;
 	char ** data = response.data;
 	
@@ -29,19 +32,21 @@ void send_http_through_socket
 		data_len += strlen( data[ line_no ] ) + strlen( newline );
 	}
 
-	log_trace( "Data length is %d including new lines", message_len );
-
-	message = malloc( message_len );
-	strcpy( message, "" );
+	message = create_astring( message, "" );
 
 	/* Actually writing data to the buffer */
 
 	for ( int line_no = 0; strlen( headers[ line_no ] ) != 0 ; line_no++ )
 	{
-		message_len += strlen( headers[ line_no ] ) + strlen( newline );
-		message = realloc( message, message_len );
-		strncat( message, headers[ line_no ], strlen( headers[ line_no ] ) );
-		strncat( message, newline, strlen( newline ) );
+		/* message_len += strlen( headers[ line_no ] ) + strlen( newline ); */
+		/* message = realloc( message, message_len ); */
+		/* strncat( message, headers[ line_no ], strlen( headers[ line_no ] ) ); */
+		/* strncat( message, newline, strlen( newline ) ); */
+		message = append_to_string( message, headers[ line_no ] );
+		log_debug( "Message is now  %d bytes", message->length );
+		message = append_to_string( message, newline );
+		log_debug( "Message is now  %d bytes", message->length );
+
 	}
 
 	/* Auto Setting headers like Content-Length, Server etc */
@@ -49,31 +54,35 @@ void send_http_through_socket
 		char * line_content_length;
 
 		asprintf( &line_content_length, "Content-Length: %d\n", data_len );
-		message_len += strlen( line_content_length );
-		message = realloc( message, message_len );
-		strcat( message, line_content_length );
-		log_trace( "Added Header 1 is %s", line_content_length );
+		/* message_len += strlen( line_content_length ); */
+		/* message = realloc( message, message_len ); */
+		/* strcat( message, line_content_length ); */
+		/* log_trace( "Added Header 1 is %s", line_content_length ); */
+		message = append_to_string( message, line_content_length );
 		free( line_content_length );
-	
 	}
 
 	/* For new line */
-	message_len += strlen( newline );
-	message = realloc( message, message_len );
-	strncat( message, newline, strlen( newline ) );
+	/* message_len += strlen( newline ); */
+	/* message = realloc( message, message_len ); */
+	/* strncat( message, newline, strlen( newline ) ); */
+	message = append_to_string( message, newline );
 
 	for ( int line_no = 0; strlen( data[ line_no ] ) != 0 ; line_no++ )
 	{
-		message_len += strlen( data[ line_no ] ) + strlen( newline );
-		message = realloc( message, message_len );
-		strncat( message, data[ line_no ], strlen( data[ line_no ] ) );
-		strncat( message, newline, strlen( newline ) );
-	}
+		/* message_len += strlen( data[ line_no ] ) + strlen( newline ); */
+		/* message = realloc( message, message_len ); */
+		/* strncat( message, data[ line_no ], strlen( data[ line_no ] ) ); */
+		/* strncat( message, newline, strlen( newline ) ); */
+		message = append_to_string( message, data[ line_no ] );
+		message = append_to_string( message, newline );
+	}	
 
-	log_trace( "Strlen of message is %d", strlen( message ) );
+	log_trace( "Strlen of message is %d", message->length );
 	log_info( "Writing %d bytes to fd %d", message_len, fd );
 	log_trace( "Writing: \n%s", message );
 
-	write( fd, message, message_len );
-	free( message );
+	write( fd, message->string, message->length );
+	/* free( message ); */
+	free_astring( message );
 }

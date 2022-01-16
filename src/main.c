@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <json-c/json.h>
 
 #include "log.h"
 #include "network.h"
@@ -12,9 +13,9 @@
 
 #define LOGLEVEL LOG_DEBUG
 
-void transmission_handler( int fd, char * transmission, struct sockaddr_in address )
+void transmission_handler( int fd, char * transmission, struct sockaddr_in address, struct RootConfig config )
 {
-	char *headers[4] = { "HTTP/1.1 200 OK", "Sever: Custom", "Content-Type: text/html", ""};
+	char *headers[] = { "HTTP/1.1 200 OK", "Sever: Custom", "Content-Type: text/html", ""};
 	char *data[5] = { "Hello", ""};
 	struct http_response response;
 	response.headers = headers;
@@ -23,7 +24,7 @@ void transmission_handler( int fd, char * transmission, struct sockaddr_in addre
 
 	response.data = data;
 
-	log_info( "Received header:\n%s", transmission );
+	log_info( "Received header:\n\"%s\"\n and thats it", transmission );
 
 	send_http_through_socket( fd, response );
 }
@@ -35,6 +36,15 @@ int main( int argc, char ** argv )
 	 * -f config file -p port -a bind address */
 	/* -v for logging */
 
+	FILE  * config_file;
+	char config[1024];
+	/* Change this later */
+	struct json_object * json_config;
+	struct json_object * address_json;
+	struct json_object * port_json;
+	struct RootConfig root_config;
+	struct astring _root_dir;
+	struct astring * root_dir = &_root_dir;
 	int opt;
 	int port = 8080;
 	char address[ INET_ADDRSTRLEN ]  = "0.0.0.0";
@@ -42,7 +52,17 @@ int main( int argc, char ** argv )
 
 	log_set_level( loglevel );
 
-	while ( ( opt = getopt( argc, argv, ":l:p:a:v" ) ) != -1 )
+	config_file = fopen( "config.json", "r" );
+	fread( config, 1024, 1, config_file );
+	json_config = json_tokener_parse( config );
+
+	json_object_object_get_ex( json_config, "address", &address_json );
+	json_object_object_get_ex( json_config, "port", &port_json );
+
+	strncpy( address, json_object_get_string( address_json ), INET_ADDRSTRLEN );
+	port = json_object_get_int( port_json );
+
+	while ( ( opt = getopt( argc, argv, ":l:r:p:a:v" ) ) != -1 )
 	{
 		switch( opt )
 		{
@@ -57,16 +77,23 @@ int main( int argc, char ** argv )
 				break;
 			case 'l':
 				break;
+			case 'r':
+				 root_config.root_dir = create_astring( root_dir, optarg );
+				break;
 			default:
 				log_warn( "Unrecognized option %s", optarg );
 
 		}
 	}
+	
 	log_trace( "Set port: %d", port );
 	log_trace( "Set address: %s", address );
 	log_trace( "Set loglevel: %d", loglevel );
 
-	create_listener( address, port, transmission_handler );
+
+	strcpy( address, root_config.address_as_string );
+	root_config.port = port;
+	create_listener( root_config, transmission_handler );
 
 	return 0;
 }
