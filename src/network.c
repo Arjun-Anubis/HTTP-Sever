@@ -41,11 +41,12 @@ void tcp_protocol
 
 		transmission_size = 1;
 		transmission = malloc( 1 );
+		int packet_number;
 		/* This is one transmission */
 		/* also this will be refactored into the networking function soon */
 		for 
 		(
-			int packet_number = 0;
+			packet_number = 0;
 			( read_size = read( fd, buffer, BUFFER_SIZE ) );
 			packet_number++
 		) 
@@ -65,6 +66,13 @@ void tcp_protocol
 
 		log_info( "End of transmission %d on connection number %d", transmission_number, connection_number );
 		log_info( "TCP handler, strlen transmission is %d and transmission_size is %d", strlen( transmission ), transmission_size );
+		if ( read_size == 0 )
+			if ( packet_number == 0 )
+			{
+				log_info( "Exiting due to empty packet" );
+				break;
+			}
+
 		strncpy( transmission, transmission, transmission_size );
 		transmission_handler( fd, transmission, address, config );
 		free( transmission );

@@ -18,6 +18,7 @@ void send_http_through_socket
 {
 	struct astring message;
 
+	int message_len = 2;
 	int data_len = 0;
 	char newline[2] = "\n";
 	char ** headers = response.headers;
@@ -38,7 +39,7 @@ void send_http_through_socket
 	{
 		message = append_to_string( message, headers[ line_no ] );
 		message = append_to_string( message, newline );
-		log_trace( "Message is now  %d bytes", message.length );
+		log_debug( "Message is now  %d bytes", message.length );
 
 	}
 
@@ -61,7 +62,7 @@ void send_http_through_socket
 	}	
 
 	log_trace( "Strlen of message is %d", message.length );
-	log_info( "Writing %d bytes to fd %d", message.length, fd );
+	log_info( "Writing %d bytes to fd %d", message_len, fd );
 	log_info( "Writing: \n%s", message );
 
 	write( fd, message.string, message.length );
@@ -83,7 +84,7 @@ struct http_request http_request_parser( char * transmission )
 
 	log_trace( "Copy is %s", transmission_cpy );
 	buffer = strtok( transmission_cpy, space );
-	log_trace( "First Token is %s", buffer );
+	log_info( "First Token is %s", buffer );
 
 	if ( strcmp( buffer, "GET" ) == 0)
 		request.type = GET;
@@ -99,13 +100,13 @@ struct http_request http_request_parser( char * transmission )
 	}
 	
 	buffer = strtok( NULL, space );
-	log_trace( "Second Token is %s", buffer );
+	log_info( "Second Token is %s", buffer );
 
 	request.path = malloc( strlen( buffer ) );
 	strncpy( request.path, buffer, strlen( buffer ) );
 
 	buffer = strtok( NULL, newline );
-	log_trace( "Third Token is %s", buffer );
+	log_info( "Third Token is %s", buffer );
 
 	request.version = malloc( strlen( buffer ) );
 	strncpy( request.version, buffer, strlen( buffer ) );

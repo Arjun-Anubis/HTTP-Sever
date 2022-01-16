@@ -15,16 +15,34 @@
 
 void transmission_handler( int fd, char * transmission, struct sockaddr_in address, struct RootConfig config )
 {
-	char *headers[] = { "HTTP/1.1 200 OK", "Sever: Custom", "Content-Type: text/html", ""};
-	char *data[5] = { "Hello", ""};
+	char * headers[] = { "HTTP/1.1 200 OK", "Sever: Custom", "Content-Type: text/html", ""};
+	char * data[5];
+	char * transmission_cpy;
 	struct http_response response;
+	struct http_request request;
 	response.headers = headers;
 
+	transmission_cpy = malloc( strlen( transmission ) );
+	strcpy( transmission_cpy, transmission );
+
 	data[0] = inet_ntoa( address.sin_addr );
+	data[1] = config.root_dir.string;
+	data[2] = "";
 
 	response.data = data;
 
-	log_info( "Received header:\n\"%s\"\n and thats it", transmission );
+	log_info( "Received header:\n%s", transmission );
+
+	request = http_request_parser( transmission_cpy );
+	if ( request.type < 0 )
+	{
+		log_warn( "Malformed request, dropping" );
+		log_debug( "Request header: %s", transmission );
+		return;
+	}
+	log_info( "Type: %d", request.type );
+	log_info( "Path: %s", request.path );
+	log_info( "Version: %s", request.version );
 
 	send_http_through_socket( fd, response );
 }
