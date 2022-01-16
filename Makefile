@@ -1,5 +1,5 @@
 CC= clang
-LIBS= -ljson-c
+LIBS= -ljson-c -lmagic
 HEADERDIR=header
 CFLAGS=-Wall -g -DLOG_USE_COLOR -I$(HEADERDIR)
 

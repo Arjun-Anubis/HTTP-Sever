@@ -1,11 +1,14 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <json-c/json.h>
+#include <magic.h>
 
 #include "log.h"
 #include "network.h"
@@ -15,21 +18,26 @@
 
 void transmission_handler( int fd, char * transmission, struct sockaddr_in address, struct RootConfig config )
 {
+	int requested_file;
 	char * headers[] = { "HTTP/1.1 200 OK", "Sever: Custom", "Content-Type: text/html", ""};
 	char * data[5];
 	char * transmission_cpy;
 	struct http_response response;
 	struct http_request request;
-	response.headers = headers;
+	struct astring full_path;
+	struct astring file;
+	struct stat file_stat;
+	const char * mime;
+	magic_t magic;
+
 
 	transmission_cpy = malloc( strlen( transmission ) );
 	strcpy( transmission_cpy, transmission );
 
-	data[0] = inet_ntoa( address.sin_addr );
-	data[1] = config.root_dir.string;
-	data[2] = "";
+	/* data[0] = inet_ntoa( address.sin_addr ); */
+	/* data[1] = config.root_dir.string; */
+	/* data[2] = ""; */
 
-	response.data = data;
 
 	log_info( "Received header:\n%s", transmission );
 
@@ -43,6 +51,50 @@ void transmission_handler( int fd, char * transmission, struct sockaddr_in addre
 	log_info( "Type: %d", request.type );
 	log_info( "Path: %s", request.path );
 	log_info( "Version: %s", request.version );
+
+	full_path = create_astring( config.root_dir.string );
+	full_path = append_to_string( full_path, request.path.string );
+
+	log_info( "Fetching file %s", full_path.string );
+
+	stat( full_path.string, &file_stat );
+	 if ( (S_ISDIR( file_stat.st_mode)) )
+	{
+		log_warn( "%s is a directory redirecting to index.html", full_path.string );
+		full_path = append_to_string( full_path, "index.html" );
+	}
+
+	stat( full_path.string, &file_stat );
+	if (! (S_ISREG( file_stat.st_mode)) )
+	{
+		log_warn( "" );
+		return;
+	}
+	
+
+	if ( access( full_path.string, R_OK < 0 ) )
+	{
+		log_warn( "%s cannot be used for reading, sending 403 forbidden", full_path );
+		return;
+	}
+
+	requested_file = open( full_path.string, O_RDONLY );
+	file = read_file_into_alloced_string( requested_file );
+	log_trace( "Read file successfully" );
+	data[0] = file.string;
+	data[1] = "";
+
+	log_info( "Getting mime type.." );
+	magic = magic_open(MAGIC_MIME); 
+	magic_load(magic, NULL);
+	magic_compile(magic, NULL);
+	mime = magic_file(magic, full_path.string );
+	log_info( "Mime type is %s", mime );
+	magic_close( magic );
+	/* log_trace( "Stuck?" ); */
+
+	response.headers = headers;
+	response.data = data;
 
 	send_http_through_socket( fd, response );
 }

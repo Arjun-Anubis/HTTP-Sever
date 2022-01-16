@@ -6,7 +6,6 @@
 
 #include "http.h"
 #include "log.h"
-#include "utils.h"
 
 #define STRLEN(s) (sizeof(s)/sizeof(s[0]))
 
@@ -24,6 +23,7 @@ void send_http_through_socket
 	char ** data = response.data;
 	
 
+	log_info( "Entered HTTP sender" );
 	/* Find data length */
 	for ( int line_no = 0; strlen( data[ line_no ] ) != 0 ; line_no++ )
 	{
@@ -101,14 +101,16 @@ struct http_request http_request_parser( char * transmission )
 	buffer = strtok( NULL, space );
 	log_trace( "Second Token is %s", buffer );
 
-	request.path = malloc( strlen( buffer ) );
-	strncpy( request.path, buffer, strlen( buffer ) );
+	/* request.path = malloc( strlen( buffer )  + 1 ); */
+	/* strncpy( request.path, buffer, strlen( buffer ) + 1 ); */
+	request.path = create_astring( buffer );
 
 	buffer = strtok( NULL, newline );
 	log_trace( "Third Token is %s", buffer );
 
-	request.version = malloc( strlen( buffer ) );
-	strncpy( request.version, buffer, strlen( buffer ) );
+	/* request.version = malloc( strlen( buffer ) + 1 ); */
+	/* strncpy( request.version, buffer, strlen( buffer ) + 1 ); */
+	request.version = create_astring( buffer );
 
 	free( transmission_cpy );
 	return request;
@@ -116,6 +118,8 @@ struct http_request http_request_parser( char * transmission )
 
 void free_http_request( struct http_request request )
 {
-	free( request.path );
-	free( request.version );
+	/* free( request.path ); */
+	/* free( request.version ); */
+	free_astring( request.path );
+	free_astring( request.version );
 }

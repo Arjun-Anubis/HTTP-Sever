@@ -10,8 +10,6 @@
 #include "log.h"
 #include "network.h"
 
-
-#define BUFFER_SIZE 30
 #define CONNECTION_QUEUE_SIZE 5
 
 void tcp_protocol

@@ -1,3 +1,5 @@
+#ifndef NETWORK_H
+#define NETWORK_H
 #include "utils.h"
 #include <arpa/inet.h>
 
@@ -11,3 +13,5 @@ int create_listener
  	struct RootConfig config,
 	void (* transmission_handler)( int, char *, struct sockaddr_in, struct RootConfig config )
 );
+
+#endif

@@ -1,3 +1,5 @@
+#include "utils.h"
+
 struct http_response 
 {
 	char ** headers;
@@ -7,8 +9,8 @@ struct http_response
 struct http_request
 {
 	int type;
-	char * path;
-	char * version;
+	struct astring path;
+	struct astring version;
 	char ** headers;
 	char * data;
 };
