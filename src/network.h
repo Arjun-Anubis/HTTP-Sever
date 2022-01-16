@@ -4,7 +4,7 @@
 struct RootConfig {
 	const char address_as_string[ INET_ADDRSTRLEN ];
 	int port;
-	struct astring * root_dir;
+	struct astring root_dir;
 };
 int create_listener
 (

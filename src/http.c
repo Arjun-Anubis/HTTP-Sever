@@ -16,8 +16,7 @@ void send_http_through_socket
 	struct http_response response
  )
 {
-	struct astring _message;
-	struct astring * message = &_message;
+	struct astring message;
 
 	int message_len = 2;
 	int data_len = 0;
@@ -32,7 +31,7 @@ void send_http_through_socket
 		data_len += strlen( data[ line_no ] ) + strlen( newline );
 	}
 
-	message = create_astring( message, "" );
+	message = create_astring( "" );
 
 	/* Actually writing data to the buffer */
 
@@ -43,9 +42,9 @@ void send_http_through_socket
 		/* strncat( message, headers[ line_no ], strlen( headers[ line_no ] ) ); */
 		/* strncat( message, newline, strlen( newline ) ); */
 		message = append_to_string( message, headers[ line_no ] );
-		log_debug( "Message is now  %d bytes", message->length );
+		log_debug( "Message is now  %d bytes", message.length );
 		message = append_to_string( message, newline );
-		log_debug( "Message is now  %d bytes", message->length );
+		log_debug( "Message is now  %d bytes", message.length );
 
 	}
 
@@ -78,11 +77,11 @@ void send_http_through_socket
 		message = append_to_string( message, newline );
 	}	
 
-	log_trace( "Strlen of message is %d", message->length );
+	log_trace( "Strlen of message is %d", message.length );
 	log_info( "Writing %d bytes to fd %d", message_len, fd );
 	log_trace( "Writing: \n%s", message );
 
-	write( fd, message->string, message->length );
+	write( fd, message.string, message.length );
 	/* free( message ); */
 	free_astring( message );
 }

@@ -43,8 +43,6 @@ int main( int argc, char ** argv )
 	struct json_object * address_json;
 	struct json_object * port_json;
 	struct RootConfig root_config;
-	struct astring _root_dir;
-	struct astring * root_dir = &_root_dir;
 	int opt;
 	int port = 8080;
 	char address[ INET_ADDRSTRLEN ]  = "0.0.0.0";
@@ -78,7 +76,7 @@ int main( int argc, char ** argv )
 			case 'l':
 				break;
 			case 'r':
-				 root_config.root_dir = create_astring( root_dir, optarg );
+				 root_config.root_dir = create_astring( optarg );
 				break;
 			default:
 				log_warn( "Unrecognized option %s", optarg );

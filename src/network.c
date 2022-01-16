@@ -119,8 +119,8 @@ int create_listener
 		return errno;
 	}
 
-	log_info( "Recieved root_dir %s", config.root_dir->string );
-	log_info( "Length is %d", config.root_dir->length );
+	log_info( "Recieved root_dir %s", config.root_dir.string );
+	log_info( "Length is %d", config.root_dir.length );
 	for ( int pid, i = 0; ; i++ )
 	{
 		if ( ( connection = accept( sock, ( struct sockaddr * )&bind_address, ( socklen_t * )&addrlen ) ) < 0 )
