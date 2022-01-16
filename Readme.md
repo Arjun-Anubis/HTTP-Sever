@@ -2,7 +2,11 @@
 
 This is a lightweight HTTP server written in C, soon to be moved to C++
 
-Dependencies: None
+Dependencies: libjson-c
+
+Install with ( on Ubuntu ):
+
+`sudo apt install libjson-dev`
 
 ## Compiling
 
